@@ -8,64 +8,126 @@ name: Build Black God Linux ISO
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build-iso:
     name: "⚡ Compile Black God Linux"
     runs-on: ubuntu-latest
-    timeout-minutes: 240  # 4 hour max
-    
-    container:
-      image: kalilinux/kali-rolling
-      options: --privileged
+    timeout-minutes: 240
 
     steps:
       # ─── Checkout Repository ──────────────────────────
-      - name: "📥 Checkout Black God Linux source"
+      - name: "📥 Checkout source"
         uses: actions/checkout@v4
 
-      # ─── Install Build Dependencies ──────────────────
-      - name: "📦 Install live-build & debootstrap"
+      # ─── Free Up Disk Space ───────────────────────────
+      - name: "🧹 Free up disk space"
         run: |
-          apt-get update
-          apt-get install -y live-build debootstrap wget gnupg2 curl cdebootstrap git
+          echo "── Before cleanup ──"
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/local/share/boost /usr/share/swift
+          sudo docker image prune --all --force 2>/dev/null || true
+          echo "── After cleanup ──"
+          df -h /
 
-      # ─── Set File Permissions ────────────────────────
-      - name: "🔧 Set executable permissions"
+      # ─── Add Kali Repository ─────────────────────────
+      - name: "🔑 Add Kali Linux repository & keys"
         run: |
-          chmod +x auto/config auto/build auto/clean
-          chmod +x kali-config/common/includes.chroot/usr/local/bin/blackgod-* || true
-          chmod +x kali-config/common/includes.chroot/etc/update-motd.d/* || true
+          # Import Kali GPG key
+          wget -q https://archive.kali.org/archive-key.asc -O /tmp/kali-key.asc
+          sudo gpg --dearmor -o /usr/share/keyrings/kali-archive-keyring.gpg /tmp/kali-key.asc
+          
+          # Add Kali repository
+          echo "deb [signed-by=/usr/share/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware" | sudo tee /etc/apt/sources.list.d/kali.list
+          
+          # Lower priority so Kali packages don't override Ubuntu system packages
+          echo -e "Package: *\nPin: release o=Kali\nPin-Priority: 50" | sudo tee /etc/apt/preferences.d/kali.pref
+          
+          sudo apt-get update
+
+      # ─── Install Build Dependencies ──────────────────
+      - name: "📦 Install live-build & tools"
+        run: |
+          sudo apt-get install -y live-build debootstrap cdebootstrap curl
 
       # ─── Configure live-build ────────────────────────
       - name: "⚙️  Configure live-build"
         run: |
-          lb config
+          # Make auto scripts executable
+          chmod +x auto/config auto/build auto/clean
+          chmod +x kali-config/common/includes.chroot/usr/local/bin/blackgod-* 2>/dev/null || true
+          chmod +x kali-config/common/includes.chroot/etc/update-motd.d/* 2>/dev/null || true
+          
+          # Run lb config
+          sudo lb config \
+            --distribution kali-rolling \
+            --archive-areas "main contrib non-free non-free-firmware" \
+            --mirror-bootstrap http://http.kali.org/kali \
+            --mirror-binary http://http.kali.org/kali \
+            --mirror-chroot http://http.kali.org/kali \
+            --debootstrap-options "--keyring=/usr/share/keyrings/kali-archive-keyring.gpg" \
+            --bootappend-live "boot=live components splash noeject" \
+            --binary-images iso-hybrid \
+            --chroot-filesystem squashfs \
+            --linux-flavours amd64 \
+            --linux-packages "linux-image linux-headers" \
+            --memtest none \
+            --updates true \
+            --source false \
+            --iso-application "Black God Linux" \
+            --iso-publisher "Black God Linux Project" \
+            --iso-volume "BLACKGOD"
+
+      # ─── Copy package lists & customizations ─────────
+      - name: "📋 Apply Black God customizations"
+        run: |
+          # Copy our package list into the live-build config
+          sudo mkdir -p config/package-lists
+          sudo cp kali-config/variant-default/package-lists/kali.list.chroot config/package-lists/
+          
+          # Copy all chroot includes (scripts, wallpaper, themes, zshrc)
+          if [ -d "kali-config/common/includes.chroot" ]; then
+            sudo mkdir -p config/includes.chroot
+            sudo cp -r kali-config/common/includes.chroot/* config/includes.chroot/
+          fi
+          
+          echo "✅ Customizations applied"
+          echo "Package lists:"
+          ls -la config/package-lists/
+          echo "Custom files:"
+          find config/includes.chroot -type f 2>/dev/null | head -20
 
       # ─── Build the ISO ───────────────────────────────
       - name: "🔨 Build Black God Linux ISO"
         run: |
-          lb build 2>&1 | tee build.log
-          echo ""
-          echo "══════════════════════════════════════"
-          ls -lh *.iso 2>/dev/null || echo "Checking for ISO in subdirectories..."
-          find . -name "*.iso" -exec ls -lh {} \; 2>/dev/null
-          echo "══════════════════════════════════════"
+          set -o pipefail
+          sudo lb build 2>&1 | tee build.log
+          echo "Build exit code: $?"
 
       # ─── Rename ISO ─────────────────────────────────
       - name: "🏷️  Rename ISO file"
         run: |
-          ISO_FILE=$(find . -name "*.iso" -type f | head -1)
+          echo "Searching for ISO files..."
+          find . -name "*.iso" -exec ls -lh {} \;
+          find . -name "*.hybrid.iso" -exec ls -lh {} \;
+          
+          ISO_FILE=$(find . -maxdepth 1 -name "*.iso" -type f | head -1)
+          if [ -z "$ISO_FILE" ]; then
+            ISO_FILE=$(find . -name "*.iso" -type f | head -1)
+          fi
+          
           if [ -n "$ISO_FILE" ]; then
             FINAL_NAME="black-god-linux-$(date +%Y%m%d)-amd64.iso"
-            mv "$ISO_FILE" "$FINAL_NAME"
+            sudo mv "$ISO_FILE" "$FINAL_NAME"
             echo "ISO_FILENAME=$FINAL_NAME" >> $GITHUB_ENV
             echo "✅ ISO built: $FINAL_NAME ($(du -h $FINAL_NAME | awk '{print $1}'))"
           else
             echo "❌ Build failed — no ISO produced"
-            echo "Last 200 lines of build log:"
-            tail -200 build.log
+            echo ""
+            echo "=== Last 300 lines of build.log ==="
+            tail -300 build.log
             exit 1
           fi
 
