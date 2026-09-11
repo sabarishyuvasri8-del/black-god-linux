@@ -1,29 +1,63 @@
-#!/bin/sh
+#!/bin/bash
+# ═══════════════════════════════════════════════════════
+#  BLACK GOD LINUX — live-build auto/config
+#  Configures live-build specifically for Kali rolling
+# ═══════════════════════════════════════════════════════
 
-# Black God Linux — live-build auto/config
-# Based on Kali Linux live-build-config
+set -e
 
+KALI_MIRROR="http://http.kali.org/kali"
+DIST="kali-rolling"
+
+# Ensure debian-cd symlink exists for kali-rolling
+LB_DATA="${LIVE_BUILD:-/usr/share/live/build}/data/debian-cd"
+if [ -d "$LB_DATA" ] && [ ! -e "$LB_DATA/$DIST" ]; then
+    ln -sf sid "$LB_DATA/$DIST" 2>/dev/null || true
+fi
+
+# Ensure keyring is in /usr/share/keyrings
+if [ ! -f /usr/share/keyrings/kali-archive-keyring.gpg ] && [ -f /etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
+    mkdir -p /usr/share/keyrings
+    cp /etc/apt/trusted.gpg.d/kali-archive-keyring.gpg /usr/share/keyrings/kali-archive-keyring.gpg 2>/dev/null || true
+fi
+
+# Clean previous configs
+rm -rf config/package-lists config/includes.chroot
+mkdir -p config
+
+# Copy custom configurations and package lists
+if [ -d "kali-config/common" ]; then
+    cp -r kali-config/common/* config/
+fi
+
+if [ -d "kali-config/variant-default" ]; then
+    cp -r kali-config/variant-default/* config/
+fi
+
+# Run lb config with correct flags for Kali Linux
 lb config noauto \
-    --distribution kali-rolling \
+    --distribution "$DIST" \
     --archive-areas "main contrib non-free non-free-firmware" \
-    --mirror-bootstrap http://http.kali.org/kali \
-    --mirror-binary http://http.kali.org/kali \
-    --mirror-chroot http://http.kali.org/kali \
-    --debootstrap-options "--include=kali-archive-keyring,apt-transport-https --keyring=/usr/share/keyrings/kali-archive-keyring.gpg" \
-    --bootappend-live "boot=live components splash noeject" \
+    --mirror-bootstrap "$KALI_MIRROR" \
+    --mirror-binary "$KALI_MIRROR" \
+    --mirror-chroot "$KALI_MIRROR" \
+    --debootstrap-options "--include=kali-archive-keyring --keyring=/usr/share/keyrings/kali-archive-keyring.gpg" \
+    --keyring-packages kali-archive-keyring \
+    --bootappend-live "boot=live components quiet splash noeject" \
     --bootappend-install "net.ifnames=0" \
     --binary-images iso-hybrid \
     --checksums sha256 \
     --chroot-filesystem squashfs \
-    --debian-installer live \
     --firmware-binary true \
     --firmware-chroot true \
     --iso-application "Black God Linux" \
     --iso-publisher "Black God Linux Project" \
     --iso-volume "BLACKGOD" \
-    --linux-flavours amd64 \
-    --linux-packages "linux-image linux-headers" \
+    --linux-packages linux-image \
     --memtest none \
-    --updates true \
+    --updates false \
+    --security false \
+    --backports false \
+    --apt-indices false \
     --source false \
     "${@}"

@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+set -o pipefail
 
 # Black God Linux — auto/build
-lb build noauto "${@}" 2>&1 | tee build.log
+lb build noauto "${@}"

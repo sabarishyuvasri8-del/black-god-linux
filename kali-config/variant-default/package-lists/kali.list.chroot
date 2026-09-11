@@ -16,7 +16,7 @@ git
 vim
 nano
 htop
-neofetch
+fastfetch
 tree
 unzip
 tmux
@@ -26,7 +26,7 @@ zsh-syntax-highlighting
 bash-completion
 man-db
 net-tools
-dnsutils
+bind9-dnsutils
 openssh-client
 openssh-server
 
@@ -55,4 +55,4 @@ macchanger
 steghide
 binwalk
 foremost
-exiftool
+libimage-exiftool-perl

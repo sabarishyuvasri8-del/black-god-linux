@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
 # Black God Linux — auto/clean
 lb clean noauto "${@}"
 rm -f build.log
+rm -rf config/package-lists config/includes.chroot
