@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Black God Linux — auto/build
+lb build noauto "${@}" 2>&1 | tee build.log

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Black God Linux — live-build auto/config
+# Based on Kali Linux live-build-config
+
+lb config noauto \
+    --distribution kali-rolling \
+    --archive-areas "main contrib non-free non-free-firmware" \
+    --mirror-bootstrap http://http.kali.org/kali \
+    --mirror-binary http://http.kali.org/kali \
+    --mirror-chroot http://http.kali.org/kali \
+    --debootstrap-options "--include=kali-archive-keyring,apt-transport-https --keyring=/usr/share/keyrings/kali-archive-keyring.gpg" \
+    --bootappend-live "boot=live components splash noeject" \
+    --bootappend-install "net.ifnames=0" \
+    --binary-images iso-hybrid \
+    --checksums sha256 \
+    --chroot-filesystem squashfs \
+    --debian-installer live \
+    --firmware-binary true \
+    --firmware-chroot true \
+    --iso-application "Black God Linux" \
+    --iso-publisher "Black God Linux Project" \
+    --iso-volume "BLACKGOD" \
+    --linux-flavours amd64 \
+    --linux-packages "linux-image linux-headers" \
+    --memtest none \
+    --updates true \
+    --source false \
+    "${@}"

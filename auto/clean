@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Black God Linux — auto/clean
+lb clean noauto "${@}"
+rm -f build.log

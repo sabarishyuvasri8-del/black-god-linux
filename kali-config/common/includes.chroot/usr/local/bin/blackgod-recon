@@ -1,0 +1,111 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════
+#  BLACK GOD LINUX — Automated Reconnaissance Tool
+#  Usage: blackgod-recon <target-domain-or-ip>
+# ═══════════════════════════════════════════════════════
+
+RED='\033[1;31m'
+GOLD='\033[1;33m'
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+WHITE='\033[1;37m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+BANNER() {
+    echo ""
+    echo -e "${RED}  ╔══════════════════════════════════════════════╗${RESET}"
+    echo -e "${RED}  ║${GOLD}   ⚡ BLACK GOD — RECON ENGINE ⚡              ${RED}║${RESET}"
+    echo -e "${RED}  ╚══════════════════════════════════════════════╝${RESET}"
+    echo ""
+}
+
+usage() {
+    echo -e "${WHITE}Usage:${RESET} blackgod-recon <target>"
+    echo -e "${DIM}  target: Domain name (example.com) or IP address (192.168.1.1)${RESET}"
+    echo ""
+    echo -e "${WHITE}Examples:${RESET}"
+    echo -e "  blackgod-recon scanme.nmap.org"
+    echo -e "  blackgod-recon 192.168.1.0/24"
+    exit 1
+}
+
+BANNER
+
+if [ -z "$1" ]; then
+    usage
+fi
+
+TARGET="$1"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUTPUT_DIR="$HOME/blackgod-recon-results/${TARGET}_${TIMESTAMP}"
+mkdir -p "$OUTPUT_DIR"
+
+echo -e "${GOLD}[*]${RESET} Target: ${CYAN}${TARGET}${RESET}"
+echo -e "${GOLD}[*]${RESET} Output: ${CYAN}${OUTPUT_DIR}${RESET}"
+echo -e "${DIM}────────────────────────────────────────────────${RESET}"
+
+# ─── Phase 1: DNS Enumeration ─────────────────────────
+echo -e "\n${GREEN}[Phase 1/5]${RESET} ${WHITE}DNS Enumeration${RESET}"
+if command -v host &> /dev/null; then
+    echo -e "${DIM}  → Running host lookup...${RESET}"
+    host "$TARGET" > "$OUTPUT_DIR/dns_host.txt" 2>&1
+    cat "$OUTPUT_DIR/dns_host.txt"
+fi
+
+if command -v dig &> /dev/null; then
+    echo -e "${DIM}  → Running dig ANY...${RESET}"
+    dig "$TARGET" ANY +noall +answer > "$OUTPUT_DIR/dns_dig.txt" 2>&1
+fi
+
+if command -v dnsrecon &> /dev/null; then
+    echo -e "${DIM}  → Running dnsrecon (standard)...${RESET}"
+    dnsrecon -d "$TARGET" -t std > "$OUTPUT_DIR/dnsrecon.txt" 2>&1
+fi
+
+# ─── Phase 2: WHOIS ──────────────────────────────────
+echo -e "\n${GREEN}[Phase 2/5]${RESET} ${WHITE}WHOIS Lookup${RESET}"
+if command -v whois &> /dev/null; then
+    whois "$TARGET" > "$OUTPUT_DIR/whois.txt" 2>&1
+    echo -e "${DIM}  → Saved to whois.txt${RESET}"
+fi
+
+# ─── Phase 3: Port Scan (Nmap) ───────────────────────
+echo -e "\n${GREEN}[Phase 3/5]${RESET} ${WHITE}Nmap Port Scan (Top 1000 ports + Service Detection)${RESET}"
+if command -v nmap &> /dev/null; then
+    echo -e "${DIM}  → Running nmap -sV -sC -T4 ...${RESET}"
+    nmap -sV -sC -T4 -oN "$OUTPUT_DIR/nmap_scan.txt" -oX "$OUTPUT_DIR/nmap_scan.xml" "$TARGET" 2>&1 | tail -20
+fi
+
+# ─── Phase 4: Web Technology Detection ───────────────
+echo -e "\n${GREEN}[Phase 4/5]${RESET} ${WHITE}Web Technology Fingerprinting${RESET}"
+if command -v whatweb &> /dev/null; then
+    echo -e "${DIM}  → Running whatweb...${RESET}"
+    whatweb "$TARGET" --log-brief="$OUTPUT_DIR/whatweb.txt" 2>&1
+fi
+
+if command -v wafw00f &> /dev/null; then
+    echo -e "${DIM}  → Running WAF detection...${RESET}"
+    wafw00f "$TARGET" > "$OUTPUT_DIR/waf_detect.txt" 2>&1
+    cat "$OUTPUT_DIR/waf_detect.txt" | tail -5
+fi
+
+# ─── Phase 5: Directory / Subdomain Bruteforce ───────
+echo -e "\n${GREEN}[Phase 5/5]${RESET} ${WHITE}Directory Bruteforce (Quick Scan)${RESET}"
+if command -v gobuster &> /dev/null; then
+    WORDLIST="/usr/share/wordlists/dirb/common.txt"
+    if [ -f "$WORDLIST" ]; then
+        echo -e "${DIM}  → Running gobuster dir (common.txt)...${RESET}"
+        gobuster dir -u "http://${TARGET}" -w "$WORDLIST" -t 30 -q -o "$OUTPUT_DIR/gobuster.txt" 2>&1 | head -20
+    else
+        echo -e "${DIM}  → Wordlist not found, skipping gobuster.${RESET}"
+    fi
+fi
+
+# ─── Summary ─────────────────────────────────────────
+echo ""
+echo -e "${DIM}────────────────────────────────────────────────${RESET}"
+echo -e "${GREEN}[✓]${RESET} ${WHITE}Recon complete!${RESET}"
+echo -e "${GOLD}[*]${RESET} All results saved in: ${CYAN}${OUTPUT_DIR}/${RESET}"
+echo -e "${DIM}    Files: $(ls "$OUTPUT_DIR" | wc -l) reports generated.${RESET}"
+echo ""

@@ -1,0 +1,50 @@
+# GRUB Bootloader Theme for Black God Linux
+# Place in /boot/grub/themes/black-god/
+
+title-text: ""
+title-color: "#FFD700"
+title-font: "DejaVu Sans Bold 16"
+message-font: "DejaVu Sans 12"
+message-color: "#CCCCCC"
+message-bg-color: "#000000"
+desktop-color: "#0a0a0a"
+terminal-font: "DejaVu Sans Mono 14"
+terminal-left: "10%"
+terminal-top: "20%"
+terminal-width: "80%"
+terminal-height: "60%"
+
+# Boot menu styling
++ boot_menu {
+    left = 25%
+    top = 30%
+    width = 50%
+    height = 45%
+    item_font = "DejaVu Sans 14"
+    item_color = "#AAAAAA"
+    selected_item_font = "DejaVu Sans Bold 14"
+    selected_item_color = "#FFD700"
+    item_height = 30
+    item_padding = 10
+    item_spacing = 5
+    selected_item_pixmap_style = "highlight_*.png"
+    scrollbar = true
+    scrollbar_width = 8
+    scrollbar_thumb = "scrollbar_thumb_*.png"
+}
+
+# Progress bar during boot
++ progress_bar {
+    id = "__timeout__"
+    left = 25%
+    top = 80%
+    width = 50%
+    height = 14
+    show_text = true
+    font = "DejaVu Sans 10"
+    text_color = "#FFD700"
+    fg_color = "#FFD700"
+    bg_color = "#333333"
+    border_color = "#555555"
+    text = "Black God Linux — Booting in %d seconds..."
+}

@@ -1,0 +1,279 @@
+# ═══════════════════════════════════════════════════════════════
+#  BLACK GOD LINUX — Master Package List
+#  All Kali Linux tools + Desktop + Black God Customizations
+# ═══════════════════════════════════════════════════════════════
+
+# ─── DESKTOP ENVIRONMENT ───────────────────────────────────────
+kali-desktop-xfce
+xfce4
+xfce4-goodies
+xfce4-terminal
+xfce4-whiskermenu-plugin
+lightdm
+lightdm-gtk-greeter
+lightdm-gtk-greeter-settings
+
+# ─── SYSTEM ESSENTIALS ────────────────────────────────────────
+kali-linux-core
+kali-linux-firmware
+kali-system-cli
+sudo
+curl
+wget
+git
+vim
+nano
+htop
+btop
+neofetch
+fastfetch
+tree
+unzip
+p7zip-full
+tmux
+screen
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+fonts-firacode
+fonts-hack
+fonts-noto
+fonts-powerline
+bash-completion
+man-db
+locales
+network-manager
+network-manager-gnome
+net-tools
+iproute2
+dnsutils
+openssh-client
+openssh-server
+openvpn
+wireguard
+
+# ─── FILE MANAGER & ARCHIVE TOOLS ─────────────────────────────
+thunar
+thunar-archive-plugin
+file-roller
+xarchiver
+
+# ─── WEB BROWSER ──────────────────────────────────────────────
+firefox-esr
+
+# ─── DOCUMENT & IMAGE VIEWERS ─────────────────────────────────
+ristretto
+mousepad
+evince
+
+# ═══════════════════════════════════════════════════════════════
+#  PENETRATION TESTING TOOLCHAIN
+#  Mirror of kali-linux-default + kali-linux-large categories
+# ═══════════════════════════════════════════════════════════════
+
+# ─── 01. INFORMATION GATHERING ────────────────────────────────
+nmap
+masscan
+netdiscover
+arp-scan
+fierce
+dnsenum
+dnsrecon
+dnsmap
+dmitry
+recon-ng
+maltego
+theharvester
+spiderfoot
+amass
+enum4linux
+nbtscan
+smbmap
+onesixtyone
+snmpcheck
+wafw00f
+whatweb
+lbd
+hping3
+fping
+arping
+p0f
+0trace
+netmask
+
+# ─── 02. VULNERABILITY ANALYSIS ──────────────────────────────
+nikto
+openvas-scanner
+legion
+unix-privesc-check
+linux-exploit-suggester
+
+# ─── 03. WEB APPLICATION ANALYSIS ────────────────────────────
+burpsuite
+zaproxy
+sqlmap
+wpscan
+gobuster
+dirb
+dirbuster
+ffuf
+wfuzz
+skipfish
+commix
+xsser
+davtest
+cadaver
+cutycapt
+webshells
+webscarab
+
+# ─── 04. DATABASE ASSESSMENT ─────────────────────────────────
+sqlmap
+oscanner
+sidguesser
+tnscmd10g
+sqlninja
+jsql-injection
+
+# ─── 05. PASSWORD ATTACKS ─────────────────────────────────────
+john
+hashcat
+hydra
+medusa
+ncrack
+ophcrack
+wordlists
+seclists
+crunch
+cewl
+chntpw
+passing-the-hash
+mimikatz
+hashid
+hash-identifier
+rainbowcrack
+samdump2
+
+# ─── 06. WIRELESS ATTACKS ────────────────────────────────────
+aircrack-ng
+kismet
+wifite
+pixiewps
+reaver
+bully
+fern-wifi-cracker
+hostapd-wpe
+mdk3
+mdk4
+airgeddon
+
+# ─── 07. REVERSE ENGINEERING ─────────────────────────────────
+ghidra
+radare2
+gdb
+gdb-peda
+edb-debugger
+apktool
+dex2jar
+javasnoop
+jadx
+rizin
+rizin-cutter
+
+# ─── 08. EXPLOITATION TOOLS ──────────────────────────────────
+metasploit-framework
+exploitdb
+searchsploit
+armitage
+beef-xss
+set
+shellnoob
+commix
+routersploit
+
+# ─── 09. SNIFFING & SPOOFING ─────────────────────────────────
+wireshark
+tshark
+tcpdump
+ettercap-graphical
+ettercap-text-only
+bettercap
+dsniff
+macchanger
+mitmproxy
+responder
+yersinia
+netsniff-ng
+scapy
+
+# ─── 10. POST EXPLOITATION ───────────────────────────────────
+powershell-empire
+evil-winrm
+crackmapexec
+impacket-scripts
+bloodhound
+neo4j
+weevely
+sbd
+dns2tcp
+exe2hexbat
+iodine
+miredo
+proxychains4
+ptunnel
+pwnat
+sshuttle
+stunnel4
+udptunnel
+
+# ─── 11. FORENSICS ───────────────────────────────────────────
+autopsy
+binwalk
+bulk-extractor
+foremost
+sleuthkit
+volatility3
+dc3dd
+ddrescue
+extundelete
+galleta
+p0f
+pdf-parser
+pdfid
+scalpel
+steghide
+exiftool
+
+# ─── 12. REPORTING TOOLS ─────────────────────────────────────
+cherrytree
+cutycapt
+faraday
+maltego
+pipal
+recordmydesktop
+
+# ─── 13. SOCIAL ENGINEERING ──────────────────────────────────
+set
+maltego
+beef-xss
+
+# ─── 14. HARDWARE / RFID / BLUETOOTH ─────────────────────────
+hackrf
+gnuradio
+inspectrum
+rtl-sdr
+ubertooth
+blueranger
+spooftooph
+bluelog
+btscanner
+
+# ─── 15. STRESS TESTING ──────────────────────────────────────
+slowhttptest
+t50
+
+# ─── 16. ANONYMITY & TUNNELING ───────────────────────────────
+tor
+torbrowser-launcher
+proxychains4
+anonsurf

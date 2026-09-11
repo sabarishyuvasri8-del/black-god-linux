@@ -1,0 +1,29 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════
+#  BLACK GOD LINUX — Terminal Welcome Banner
+# ═══════════════════════════════════════════════════════
+
+RED='\033[1;31m'
+GOLD='\033[1;33m'
+WHITE='\033[1;37m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+echo ""
+echo -e "${RED}    ██████╗ ██╗      █████╗  ██████╗██╗  ██╗     ██████╗  ██████╗ ██████╗ ${RESET}"
+echo -e "${RED}    ██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝    ██╔════╝ ██╔═══██╗██╔══██╗${RESET}"
+echo -e "${GOLD}    ██████╔╝██║     ███████║██║     █████╔╝     ██║  ███╗██║   ██║██║  ██║${RESET}"
+echo -e "${GOLD}    ██╔══██╗██║     ██╔══██║██║     ██╔═██╗     ██║   ██║██║   ██║██║  ██║${RESET}"
+echo -e "${RED}    ██████╔╝███████╗██║  ██║╚██████╗██║  ██╗    ╚██████╔╝╚██████╔╝██████╔╝${RESET}"
+echo -e "${RED}    ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝     ╚═════╝  ╚═════╝ ╚═════╝ ${RESET}"
+echo ""
+echo -e "${WHITE}                    ⚡ L I N U X ⚡${RESET}"
+echo ""
+echo -e "${DIM}    ┌──────────────────────────────────────────────────────┐${RESET}"
+echo -e "${DIM}    │${RESET}  ${GOLD}Kernel${RESET}: $(uname -r)                              ${DIM}│${RESET}"
+echo -e "${DIM}    │${RESET}  ${GOLD}Arch${RESET}:   $(uname -m)                                     ${DIM}│${RESET}"
+echo -e "${DIM}    │${RESET}  ${GOLD}Shell${RESET}:  $(basename $SHELL)                                      ${DIM}│${RESET}"
+echo -e "${DIM}    │${RESET}  ${GOLD}User${RESET}:   $(whoami)@$(hostname)                         ${DIM}│${RESET}"
+echo -e "${DIM}    │${RESET}  ${RED}⚠  Use responsibly. Ethical hacking only.${RESET}            ${DIM}│${RESET}"
+echo -e "${DIM}    └──────────────────────────────────────────────────────┘${RESET}"
+echo ""

@@ -1,0 +1,79 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════
+#  BLACK GOD LINUX — Wi-Fi Monitor Mode Toggle
+#  Usage: blackgod-wifi [start|stop|status]
+# ═══════════════════════════════════════════════════════
+
+RED='\033[1;31m'
+GOLD='\033[1;33m'
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+WHITE='\033[1;37m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+echo ""
+echo -e "${RED}  ╔══════════════════════════════════════════════╗${RESET}"
+echo -e "${RED}  ║${GOLD}   ⚡ BLACK GOD — WIFI MONITOR MODE ⚡          ${RED}║${RESET}"
+echo -e "${RED}  ╚══════════════════════════════════════════════╝${RESET}"
+echo ""
+
+# Check for root
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}[✗]${RESET} This script must be run as root."
+    echo -e "${DIM}    Run: sudo blackgod-wifi start${RESET}"
+    exit 1
+fi
+
+# Auto-detect wireless interface
+IFACE=$(iw dev 2>/dev/null | awk '$1=="Interface"{print $2}' | head -1)
+
+if [ -z "$IFACE" ]; then
+    echo -e "${RED}[✗]${RESET} No wireless interface detected."
+    echo -e "${DIM}    Make sure a Wi-Fi adapter is connected.${RESET}"
+    exit 1
+fi
+
+echo -e "${GOLD}[*]${RESET} Detected interface: ${CYAN}${IFACE}${RESET}"
+
+case "${1}" in
+    start)
+        echo -e "${GREEN}[+]${RESET} Killing interfering processes..."
+        airmon-ng check kill 2>&1 | tail -5
+
+        echo -e "${GREEN}[+]${RESET} Enabling monitor mode on ${CYAN}${IFACE}${RESET}..."
+        airmon-ng start "$IFACE" 2>&1 | tail -5
+
+        MON_IFACE=$(iw dev 2>/dev/null | awk '$1=="Interface"{print $2}' | head -1)
+        echo ""
+        echo -e "${GREEN}[✓]${RESET} Monitor mode ${WHITE}ACTIVE${RESET} on: ${CYAN}${MON_IFACE}${RESET}"
+        echo -e "${DIM}    You can now use tools like airodump-ng, bettercap, kismet.${RESET}"
+        ;;
+    stop)
+        echo -e "${GOLD}[+]${RESET} Disabling monitor mode on ${CYAN}${IFACE}${RESET}..."
+        airmon-ng stop "$IFACE" 2>&1 | tail -5
+
+        echo -e "${GREEN}[+]${RESET} Restarting NetworkManager..."
+        systemctl restart NetworkManager 2>/dev/null
+        service network-manager restart 2>/dev/null
+
+        echo ""
+        echo -e "${GREEN}[✓]${RESET} Monitor mode ${RED}STOPPED${RESET}. Normal Wi-Fi restored."
+        ;;
+    status)
+        MODE=$(iw dev "$IFACE" info 2>/dev/null | grep type | awk '{print $2}')
+        if [ "$MODE" = "monitor" ]; then
+            echo -e "${GREEN}[✓]${RESET} ${CYAN}${IFACE}${RESET} is in ${WHITE}MONITOR${RESET} mode."
+        else
+            echo -e "${GOLD}[*]${RESET} ${CYAN}${IFACE}${RESET} is in ${WHITE}MANAGED${RESET} (normal) mode."
+        fi
+        ;;
+    *)
+        echo -e "${WHITE}Usage:${RESET} blackgod-wifi [start|stop|status]"
+        echo ""
+        echo -e "  ${GREEN}start${RESET}   — Kill interfering processes & enable monitor mode"
+        echo -e "  ${RED}stop${RESET}    — Disable monitor mode & restore normal Wi-Fi"
+        echo -e "  ${GOLD}status${RESET}  — Check current interface mode"
+        ;;
+esac
+echo ""
