@@ -24,20 +24,30 @@ jobs:
           run-id: 34634159894
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "📦 Create GitHub Release"
+      - name: "📦 Split ISO and Create GitHub Release"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls -la
           ISO_FILE=$(find . -name "*.iso" -type f | head -1)
           SHA_FILE=$(find . -name "*.sha256" -type f | head -1)
-          echo "Found ISO: $ISO_FILE"
-          echo "Found SHA: $SHA_FILE"
+          
+          echo "Splitting $ISO_FILE into chunks < 2GB for GitHub Release CDN..."
+          split -b 1900M "$ISO_FILE" black-god-linux-part-
+          ls -lh black-god-linux-part-*
+          
           TAG="v1.0.0"
-          echo "### ⚡ Black God Linux — Official ISO Release" > release_notes.md
-          echo "- Base: Kali Linux Rolling (Debian)" >> release_notes.md
-          echo "- Tools: 300+ Pre-installed penetration testing tools" >> release_notes.md
-          echo "- Desktop: Custom XFCE cyber theme & golden skull branding" >> release_notes.md
-          echo "- Commands: blackgod-recon, blackgod-wifi, blackgod-update" >> release_notes.md
+          echo "### ⚡ Black God Linux v1.0.0 — Official ISO Release" > release_notes.md
+          echo "" >> release_notes.md
+          echo "To combine the parts after downloading into a single ISO, run in Terminal:" >> release_notes.md
+          echo "\`\`\`bash" >> release_notes.md
+          echo "cat black-god-linux-part-* > black-god-linux.iso" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          
           gh release delete "$TAG" -R "${{ github.repository }}" --yes 2>/dev/null || true
-          gh release create "$TAG" -R "${{ github.repository }}" --title "⚡ Black God Linux $TAG" --notes-file release_notes.md "$ISO_FILE" "$SHA_FILE"
+          
+          gh release create "$TAG" \
+            -R "${{ github.repository }}" \
+            --title "⚡ Black God Linux $TAG" \
+            --notes-file release_notes.md \
+            black-god-linux-part-* "$SHA_FILE"
