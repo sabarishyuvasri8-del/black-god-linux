@@ -14,6 +14,9 @@ jobs:
     name: "🚀 Publish GitHub Release"
     runs-on: ubuntu-latest
     steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+
       - name: "📥 Download built ISO from previous run"
         uses: actions/download-artifact@v4
         with:
@@ -36,15 +39,17 @@ jobs:
           
           cat << 'EOF' > release_notes.md
           ### ⚡ Black God Linux — Official ISO Release
-          - **Base**: Kali Linux Rolling (Debian)
-          - **Tools**: 300+ Pre-installed penetration testing tools
-          - **Desktop**: Custom XFCE cyber theme & golden skull branding
-          - **Commands**: blackgod-recon, blackgod-wifi, blackgod-update
+
+- **Base**: Kali Linux Rolling (Debian)
+- **Tools**: 300+ Pre-installed penetration testing tools
+- **Desktop**: Custom XFCE cyber theme & golden skull branding
+- **Commands**: blackgod-recon, blackgod-wifi, blackgod-update
           EOF
           
-          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release delete "$TAG" -R "${{ github.repository }}" --yes 2>/dev/null || true
           
           gh release create "$TAG" \
+            -R "${{ github.repository }}" \
             --title "⚡ Black God Linux $TAG" \
             --notes-file release_notes.md \
             "$ISO_FILE" "$SHA_FILE"
