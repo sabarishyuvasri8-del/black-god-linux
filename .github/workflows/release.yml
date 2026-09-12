@@ -5,11 +5,6 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag'
-        required: false
-        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -30,24 +25,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ls -lh
+          ls -la
           ISO_FILE=$(find . -name "*.iso" -type f | head -1)
           SHA_FILE=$(find . -name "*.sha256" -type f | head -1)
           
           echo "Found ISO: $ISO_FILE"
           echo "Found SHA: $SHA_FILE"
           
-          TAG_NAME="${{ github.ref_name }}"
-          if [ -z "$TAG_NAME" ] || [[ "$TAG_NAME" != v* ]]; then
-            TAG_NAME="v1.0.0"
-          fi
+          TAG="v1.0.0"
           
-          gh release create "$TAG_NAME" \
-            --title "⚡ Black God Linux $TAG_NAME" \
-            --notes "### ⚡ Black God Linux — Official ISO Release
-
-- **Base**: Kali Linux Rolling (Debian)
-- **Tools**: 300+ Pre-installed penetration testing tools
-- **Desktop**: Custom XFCE cyber theme & golden skull branding
-- **Commands**: blackgod-recon, blackgod-wifi, blackgod-update" \
+          cat << 'EOF' > release_notes.md
+          ### ⚡ Black God Linux — Official ISO Release
+          - **Base**: Kali Linux Rolling (Debian)
+          - **Tools**: 300+ Pre-installed penetration testing tools
+          - **Desktop**: Custom XFCE cyber theme & golden skull branding
+          - **Commands**: blackgod-recon, blackgod-wifi, blackgod-update
+          EOF
+          
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          
+          gh release create "$TAG" \
+            --title "⚡ Black God Linux $TAG" \
+            --notes-file release_notes.md \
             "$ISO_FILE" "$SHA_FILE"

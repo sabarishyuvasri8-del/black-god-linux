@@ -8,6 +8,10 @@ name: Build Black God Linux ISO
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/release.yml'
+      - 'README.md'
+      - 'assets/**'
   workflow_dispatch:
 
 jobs:
