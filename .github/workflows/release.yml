@@ -31,25 +31,13 @@ jobs:
           ls -la
           ISO_FILE=$(find . -name "*.iso" -type f | head -1)
           SHA_FILE=$(find . -name "*.sha256" -type f | head -1)
-          
           echo "Found ISO: $ISO_FILE"
           echo "Found SHA: $SHA_FILE"
-          
           TAG="v1.0.0"
-          
-          cat << 'EOF' > release_notes.md
-          ### ⚡ Black God Linux — Official ISO Release
-
-- **Base**: Kali Linux Rolling (Debian)
-- **Tools**: 300+ Pre-installed penetration testing tools
-- **Desktop**: Custom XFCE cyber theme & golden skull branding
-- **Commands**: blackgod-recon, blackgod-wifi, blackgod-update
-          EOF
-          
+          echo "### ⚡ Black God Linux — Official ISO Release" > release_notes.md
+          echo "- Base: Kali Linux Rolling (Debian)" >> release_notes.md
+          echo "- Tools: 300+ Pre-installed penetration testing tools" >> release_notes.md
+          echo "- Desktop: Custom XFCE cyber theme & golden skull branding" >> release_notes.md
+          echo "- Commands: blackgod-recon, blackgod-wifi, blackgod-update" >> release_notes.md
           gh release delete "$TAG" -R "${{ github.repository }}" --yes 2>/dev/null || true
-          
-          gh release create "$TAG" \
-            -R "${{ github.repository }}" \
-            --title "⚡ Black God Linux $TAG" \
-            --notes-file release_notes.md \
-            "$ISO_FILE" "$SHA_FILE"
+          gh release create "$TAG" -R "${{ github.repository }}" --title "⚡ Black God Linux $TAG" --notes-file release_notes.md "$ISO_FILE" "$SHA_FILE"
