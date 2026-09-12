@@ -1,13 +1,27 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════
 #  BLACK GOD LINUX — live-build auto/config
-#  Configures live-build specifically for Kali rolling
+#  Supports both AMD64 (PC) and ARM64 (Apple Silicon)
 # ═══════════════════════════════════════════════════════
 
 set -e
 
 KALI_MIRROR="http://http.kali.org/kali"
 DIST="kali-rolling"
+ARCH=$(dpkg --print-architecture)
+
+# Detect architecture from args if specified
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -a|--arch|--architecture|--architectures)
+            ARCH="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 # Ensure debian-cd symlink exists for kali-rolling
 LB_DATA="${LIVE_BUILD:-/usr/share/live/build}/data/debian-cd"
@@ -34,9 +48,18 @@ if [ -d "kali-config/variant-default" ]; then
     cp -r kali-config/variant-default/* config/
 fi
 
-# Run lb config with correct flags for Kali Linux
+# Architecture-specific options
+LB_ARCH_OPTS=""
+if [ "$ARCH" = "arm64" ]; then
+    LB_ARCH_OPTS="--bootloaders grub-efi --uefi-secure-boot disable --linux-packages linux-image"
+else
+    LB_ARCH_OPTS="--linux-packages linux-image"
+fi
+
+# Run lb config with correct flags
 lb config noauto \
     --distribution "$DIST" \
+    --architectures "$ARCH" \
     --archive-areas "main contrib non-free non-free-firmware" \
     --mirror-bootstrap "$KALI_MIRROR" \
     --mirror-binary "$KALI_MIRROR" \
@@ -53,11 +76,11 @@ lb config noauto \
     --iso-application "Black God Linux" \
     --iso-publisher "Black God Linux Project" \
     --iso-volume "BLACKGOD" \
-    --linux-packages linux-image \
     --memtest none \
     --updates false \
     --security false \
     --backports false \
     --apt-indices false \
     --source false \
+    $LB_ARCH_OPTS \
     "${@}"

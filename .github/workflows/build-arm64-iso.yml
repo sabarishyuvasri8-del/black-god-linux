@@ -1,0 +1,132 @@
+# ═══════════════════════════════════════════════════════
+#  BLACK GOD LINUX — Apple Silicon (ARM64) Build Pipeline
+#  Compiles native ARM64 ISO for Apple M1/M2/M3/M4 Macs
+# ═══════════════════════════════════════════════════════
+
+name: Build Black God Linux ARM64 (Apple Silicon)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-arm64-iso.yml'
+
+jobs:
+  build-arm64:
+    name: "⚡ Compile Black God Linux ARM64"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+
+    steps:
+      # ─── Checkout Repository ──────────────────────────
+      - name: "📥 Checkout source"
+        uses: actions/checkout@v4
+
+      # ─── Free Up Disk Space ───────────────────────────
+      - name: "🧹 Free up runner disk space"
+        run: |
+          echo "── Disk space before cleanup ──"
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /usr/share/swift 2>/dev/null || true
+          sudo docker system prune -af --volumes 2>/dev/null || true
+          echo "── Disk space after cleanup ──"
+          df -h /
+
+      # ─── Set File Permissions ─────────────────────────
+      - name: "🔧 Set permissions on scripts"
+        run: |
+          chmod +x auto/config auto/build auto/clean build.sh
+          chmod +x kali-config/common/includes.chroot/usr/local/bin/blackgod-* 2>/dev/null || true
+          chmod +x kali-config/common/includes.chroot/etc/update-motd.d/* 2>/dev/null || true
+
+      # ─── Build ARM64 ISO inside Kali Container ────────
+      - name: "🔨 Build ARM64 ISO inside Kali Linux container"
+        run: |
+          docker run --privileged \
+            -v "${{ github.workspace }}:/build" \
+            -w /build \
+            kalilinux/kali-rolling \
+            bash -c '
+              set -e
+              set -o pipefail
+
+              echo "=========================================="
+              echo "  [1/4] Updating Kali package lists (ARM64)"
+              echo "=========================================="
+              apt-get update
+
+              echo "=========================================="
+              echo "  [2/4] Installing live-build & tools"
+              echo "=========================================="
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+                live-build \
+                cdebootstrap \
+                debootstrap \
+                curl \
+                git \
+                wget \
+                squashfs-tools \
+                xorriso \
+                grub-efi-arm64-bin \
+                mtools \
+                dosfstools \
+                ca-certificates
+
+              echo "=========================================="
+              echo "  [3/4] Configuring live-build for ARM64"
+              echo "=========================================="
+              lb clean --purge 2>/dev/null || true
+              lb config --architectures arm64
+
+              echo "=========================================="
+              echo "  [4/4] Building Black God Linux ARM64 ISO"
+              echo "=========================================="
+              lb build 2>&1 | tee build.log
+            '
+
+      # ─── Fix Ownership & Verify ISO ───────────────────
+      - name: "🏷️  Locate and rename ARM64 ISO"
+        run: |
+          sudo chown -R $USER:$USER "${{ github.workspace }}"
+          echo "Looking for built ISO images..."
+          find . -maxdepth 2 -name "*.iso" -ls || true
+
+          ISO_FILE=$(find . -maxdepth 2 -name "*.iso" -type f | head -1)
+          if [ -n "$ISO_FILE" ]; then
+            FINAL_NAME="black-god-linux-$(date +%Y%m%d)-arm64.iso"
+            mv "$ISO_FILE" "$FINAL_NAME"
+            echo "ISO_FILENAME=$FINAL_NAME" >> $GITHUB_ENV
+            echo "✅ ARM64 ISO successfully generated: $FINAL_NAME ($(du -h $FINAL_NAME | awk '{print $1}'))"
+          else
+            echo "❌ Build failed — no ISO file produced."
+            echo ""
+            echo "=== Last 250 lines of build.log ==="
+            tail -250 build.log 2>/dev/null || true
+            exit 1
+          fi
+
+      # ─── Generate SHA256 Checksum ─────────────────────
+      - name: "🔒 Generate SHA256 checksum"
+        run: |
+          sha256sum "${{ env.ISO_FILENAME }}" > "${{ env.ISO_FILENAME }}.sha256"
+          cat "${{ env.ISO_FILENAME }}.sha256"
+
+      # ─── Upload ISO as Artifact ───────────────────────
+      - name: "📤 Upload ARM64 ISO artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: black-god-linux-arm64-iso
+          path: |
+            ${{ env.ISO_FILENAME }}
+            ${{ env.ISO_FILENAME }}.sha256
+          retention-days: 7
+          compression-level: 0
+
+      # ─── Upload Build Log ─────────────────────────────
+      - name: "📋 Upload build log"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-build-log
+          path: build.log
+          retention-days: 3
