@@ -1,7 +1,15 @@
 name: Publish Black God Linux Release
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag'
+        required: false
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -29,9 +37,14 @@ jobs:
           echo "Found ISO: $ISO_FILE"
           echo "Found SHA: $SHA_FILE"
           
-          gh release create v1.0.0 \
-            --title "⚡ Black God Linux v1.0.0" \
-            --notes "### ⚡ Black God Linux v1.0.0 — Official ISO Release
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [[ "$TAG_NAME" != v* ]]; then
+            TAG_NAME="v1.0.0"
+          fi
+          
+          gh release create "$TAG_NAME" \
+            --title "⚡ Black God Linux $TAG_NAME" \
+            --notes "### ⚡ Black God Linux — Official ISO Release
 
 - **Base**: Kali Linux Rolling (Debian)
 - **Tools**: 300+ Pre-installed penetration testing tools
