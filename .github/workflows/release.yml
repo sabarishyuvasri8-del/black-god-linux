@@ -17,14 +17,14 @@ jobs:
       - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: "📥 Download built ISO from previous run"
+      - name: "📥 Download built ARM64 ISO from previous run"
         uses: actions/download-artifact@v4
         with:
-          name: black-god-linux-iso
-          run-id: 34634159894
+          name: black-god-linux-arm64-iso
+          run-id: 34698812725
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "📦 Split ISO and Create GitHub Release"
+      - name: "📦 Split ARM64 ISO and Create GitHub Release"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -33,21 +33,27 @@ jobs:
           SHA_FILE=$(find . -name "*.sha256" -type f | head -1)
           
           echo "Splitting $ISO_FILE into chunks < 2GB for GitHub Release CDN..."
-          split -b 1900M "$ISO_FILE" black-god-linux-part-
-          ls -lh black-god-linux-part-*
+          split -b 1900M "$ISO_FILE" black-god-linux-arm64-part-
+          ls -lh black-god-linux-arm64-part-*
           
-          TAG="v1.0.0"
-          echo "### ⚡ Black God Linux v1.0.0 — Official ISO Release" > release_notes.md
+          TAG="v1.1.0-arm64"
+          echo "### ⚡ Black God Linux v1.1.0 — Apple Silicon (ARM64) Official Release" > release_notes.md
+          echo "" >> release_notes.md
+          echo "- **Architecture**: Native Apple Silicon ARM64 (M1/M2/M3/M4)" >> release_notes.md
+          echo "- **Speed in UTM**: Runs in **Virtualize** mode with full hardware acceleration (boots in 3s!)" >> release_notes.md
+          echo "- **Branding**: Golden Skull Cyber Wallpaper pre-applied automatically as system default" >> release_notes.md
+          echo "- **Theme**: Kali-Dark pre-configured with custom Black God ASCII banner" >> release_notes.md
+          echo "- **Tools**: 300+ Pre-installed penetration testing tools" >> release_notes.md
           echo "" >> release_notes.md
           echo "To combine the parts after downloading into a single ISO, run in Terminal:" >> release_notes.md
           echo "\`\`\`bash" >> release_notes.md
-          echo "cat black-god-linux-part-* > black-god-linux.iso" >> release_notes.md
+          echo "cat black-god-linux-arm64-part-* > black-god-linux-arm64.iso" >> release_notes.md
           echo "\`\`\`" >> release_notes.md
           
           gh release delete "$TAG" -R "${{ github.repository }}" --yes 2>/dev/null || true
           
           gh release create "$TAG" \
             -R "${{ github.repository }}" \
-            --title "⚡ Black God Linux $TAG" \
+            --title "⚡ Black God Linux v1.1.0 (Apple Silicon ARM64 Edition)" \
             --notes-file release_notes.md \
-            black-god-linux-part-* "$SHA_FILE"
+            black-god-linux-arm64-part-* "$SHA_FILE"
