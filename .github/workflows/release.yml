@@ -1,0 +1,40 @@
+name: Publish Black God Linux Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: "🚀 Publish GitHub Release"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📥 Download built ISO from previous run"
+        uses: actions/download-artifact@v4
+        with:
+          name: black-god-linux-iso
+          run-id: 34634159894
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "📦 Create GitHub Release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -lh
+          ISO_FILE=$(find . -name "*.iso" -type f | head -1)
+          SHA_FILE=$(find . -name "*.sha256" -type f | head -1)
+          
+          echo "Found ISO: $ISO_FILE"
+          echo "Found SHA: $SHA_FILE"
+          
+          gh release create v1.0.0 \
+            --title "⚡ Black God Linux v1.0.0" \
+            --notes "### ⚡ Black God Linux v1.0.0 — Official ISO Release
+
+- **Base**: Kali Linux Rolling (Debian)
+- **Tools**: 300+ Pre-installed penetration testing tools
+- **Desktop**: Custom XFCE cyber theme & golden skull branding
+- **Commands**: blackgod-recon, blackgod-wifi, blackgod-update" \
+            "$ISO_FILE" "$SHA_FILE"
